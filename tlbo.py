@@ -5,8 +5,8 @@ from operator import attrgetter
 import time
 listfile = listdir("test")
 pop=100
-gen = 500
-# listfile = ['6st70-2x3.clt']
+gen = 100
+#listfile = ['6st70-2x3.clt']
 
 def secondsToStr(t):
     return "%d:%02d:%02d.%03d" % \
