@@ -4,10 +4,10 @@ from functools import reduce
 from operator import attrgetter
 import time
 listfile = listdir("test")
-pop=100
-gen = 100
+pop=10
+gen = 10
 #listfile = ['6st70-2x3.clt']
-
+#listfile = ['10eil76.clt']
 def secondsToStr(t):
     return "%d:%02d:%02d.%03d" % \
         reduce(lambda ll,b : divmod(ll[0],b) + ll[1:],
@@ -28,7 +28,7 @@ for file in listfile:
 		teacher = min(population, key=attrgetter('fitness'))
 		#write to file
 		result_file.write(str(x)+' \t'+str(teacher.fitness)+'\n')
-		diff = teacher.subjects - np.mean([x.subjects for x in population],axis=0)
+		diff = np.random.rand()*(teacher.subjects - np.random.randint(1,3)*np.mean([x.subjects for x in population],axis=0))
 		# buoc 1
 		for y in range(pop):
 			new = Learner(population[y].subjects+diff*np.random.rand(),population[y].node)
