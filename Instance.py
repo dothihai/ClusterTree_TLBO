@@ -1,8 +1,9 @@
 import numpy as np
 import networkx as nx
 import numpy as np
-from Algorithm import *
 import time
+from Algorithm import *
+from itertools import combinations
 class Instance(object):
 	"""docstring for Insta"""
 	def __init__(self, name):
@@ -41,29 +42,38 @@ class Instance(object):
 			for x in range(v_n):
 				for y in range(v_n):
 					self.distance[x,y]=np.linalg.norm(coor[x]-coor[y])
+			# print(self.distance)
 		
 		self.dim = v_n
-
+		
 	def evaluate(self,learner):
 		prufer,err = self.decode(learner.subjects,learner.node)
 		if err:
 			learner.fitness =  1e20
 			return
 		tree = self.decode_tree(prufer) # actually not prufer tho, well whatever :)
+		# cost = 0
+		# for x1,x2 in combinations(range(self.dim),2):
+		# 	route = list(nx.all_simple_paths(tree, source=x1, target=x2))[0]
+		# 	route_cost = 0
+		# 	for x in range(len(route)-1):
+		# 		n1 = route[x]
+		# 		n2 = route[x+1]
+		# 		route_cost = route_cost + self.distance[n1,n2]
+		# 	cost = cost + route_cost
+		# learner.fitness = cost
+
 		cost = 0
-		for x1 in range(self.dim):
-			for x2 in range(self.dim):
-				route_cost = 0
-				if x1 == x2: continue
-				route = list(nx.all_simple_paths(tree, source=x1, target=x2))[0]
-				for x in range(len(route)-1):
-					n1 = route[x]-1
-					n2 = route[x+1]-1
-					route_cost = route_cost + self.distance[n1,n2]
-				cost = cost + route_cost
+		ctree = tree.copy()
+		edge_list = ctree.edges
+		for edge in edge_list:
+			a,b = edge
+			ctree.remove_edge(a,b)
+			w = len(list(nx.dfs_preorder_nodes(ctree,a)))
+			cost = cost + w * (self.dim - w) * self.distance[a,b]
+			ctree.add_edge(a,b)
 		learner.fitness = cost
-		print(cost)
-		# return cost,tree
+		return cost
 
 	def decode(self,subjects,node): 
 		# node array of array int 

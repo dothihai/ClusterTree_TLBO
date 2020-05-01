@@ -4,8 +4,8 @@ from functools import reduce
 from operator import attrgetter
 import time
 listfile = listdir("test")
-pop=10
-gen = 10
+pop= 100
+gen = 500
 #listfile = ['6st70-2x3.clt']
 #listfile = ['10eil76.clt']
 def secondsToStr(t):
