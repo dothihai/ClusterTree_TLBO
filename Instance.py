@@ -62,17 +62,25 @@ class Instance(object):
 		# 		route_cost = route_cost + self.distance[n1,n2]
 		# 	cost = cost + route_cost
 		# learner.fitness = cost
-
 		cost = 0
-		ctree = tree.copy()
-		edge_list = ctree.edges
-		for edge in edge_list:
-			a,b = edge
-			ctree.remove_edge(a,b)
-			w = len(list(nx.dfs_preorder_nodes(ctree,a)))
-			cost = cost + w * (self.dim - w) * self.distance[a,b]
-			ctree.add_edge(a,b)
+		w = np.ones(self.dim)
+		l = nx.dfs_predecessors(tree,0)    
+		h = list(l)[::-1]
+		for z in h:
+			w[l[z]] = w[l[z]]+w[z]
+			cost = cost + w[z] * (self.dim - w[z]) * self.distance[z,l[z]]
+
+		# cost = 0
+		# ctree = tree.copy()
+		# edge_list = ctree.edges
+		# for edge in edge_list:
+		# 	a,b = edge
+		# 	ctree.remove_edge(a,b)
+		# 	w = len(list(nx.dfs_preorder_nodes(ctree,a)))
+		# 	cost = cost + w * (self.dim - w) * self.distance[a,b]
+		# 	ctree.add_edge(a,b)
 		learner.fitness = cost
+		# print(cost,cost0)
 		return cost
 
 	def decode(self,subjects,node): 
