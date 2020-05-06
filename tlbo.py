@@ -6,6 +6,7 @@ import time
 listfile = listdir("test")
 pop= 100
 gen = 500
+# listfile = ['10hk48.clt']
 #listfile = ['6st70-2x3.clt']
 #listfile = ['10eil76.clt']
 def secondsToStr(t):
@@ -48,6 +49,7 @@ for file in listfile:
 				instance.evaluate(new)
 			if new.fitness < population[y].fitness:
 				population[y] = new
+		#print(teacher.fitness)
 	
 	result_file.close()
 	best = min(population, key=attrgetter('fitness'))
