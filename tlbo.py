@@ -4,7 +4,7 @@ from functools import reduce
 from operator import attrgetter
 import time
 listfile = listdir("test")
-pop= 100
+pop= 1000
 gen = 500
 # listfile = ['10hk48.clt']
 #listfile = ['6st70-2x3.clt']
