@@ -11,7 +11,7 @@ class Instance(object):
 		filename = 'test/'+name
 		self.resultname = 'result/_'+name+'_.gen'
 		self.resultnameopt = 'result/_'+name+'_.opt'
-
+		self.coor = []
 		with open(filename) as f:
 			if "NODE_COORD_SECTION" not in f.read():
 				self.use = False
@@ -23,7 +23,6 @@ class Instance(object):
 			v_n = 0 # so vertex
 			c_n = 0 # so cluster
 			self.cluster = [] # cac cluster
-			coor = [] # coor
 			line = f.readline()
 			while "NODE_COORD_SECTION" not in line:
 				line = f.readline()
@@ -34,7 +33,7 @@ class Instance(object):
 			self.distance = np.empty([v_n,v_n])		
 			for x in range(v_n):
 				a,b = f.readline().split()[-2:]
-				coor.append(np.array([float(a),float(b)])) #float 
+				self.coor.append(np.array([float(a),float(b)])) #float 
 			f.readline()
 			f.readline()
 			for x in range(c_n):
@@ -42,17 +41,20 @@ class Instance(object):
 				self.cluster.append(cluster)
 			for x in range(v_n):
 				for y in range(v_n):
-					self.distance[x,y]=np.linalg.norm(coor[x]-coor[y])
+					self.distance[x,y]=np.linalg.norm(self.coor[x]-self.coor[y])
 			# print(self.distance)
 		
 		self.dim = v_n
 		
 	def evaluate(self,learner):
-		prufer,err = self.decode(learner.subjects,learner.node)
+		prufer,err = self.decode(learner.subjects)
+		# print(prufer)
+		learner.seq = prufer
 		if err:
 			learner.fitness =  1e20
 			return
 		tree = self.decode_tree(prufer) # actually not prufer tho, well whatever :)
+		learner.tree = tree
 		# cost1 = 0
 		# for x1,x2 in combinations(range(self.dim),2):
 		# 	route = list(nx.all_simple_paths(tree, source=x1, target=x2))[0]
@@ -73,33 +75,31 @@ class Instance(object):
 			w[l[z]] = w[l[z]]+w[z]
 			cost = cost + w[z] * (self.dim - w[z]) * self.distance[z,l[z]]
 
-		# cost2 = 0
-		# ctree = tree.copy()
-		# edge_list = ctree.edges
-		# for edge in edge_list:
-		# 	a,b = edge
-		# 	ctree.remove_edge(a,b)
-		# 	w = len(list(nx.dfs_preorder_nodes(ctree,a)))
-		# 	cost2 = cost2 + w * (self.dim - w) * self.distance[a,b]
-		# 	ctree.add_edge(a,b)
 		learner.fitness = cost
 		# print(len(tree.edges))
 		return cost
 
-	def decode(self,subjects,node): 
+	def decode(self,subjects): 
 		# node array of array int 
 		# subject (float) de dung tlbo
 		seq = []
 		start = 0
 		err = False
-		for x in node[:-1]:
-			if len(x) == 0:
+		c_l = [len(x) for x in self.cluster] # do dai tung cluster
+		c_n = len(self.cluster)
+		for x in c_l:
+			if x < 3:
 				seq.append([])
 				continue
-			pos = np.argsort(subjects[start:start+len(x)])
-			seq.append([x[i] for i in pos])
-			start = start + len(x)
-		seq.append(node[-1])
+			sequence = subjects[start:start+x-2] 
+			seq.append([int(np.floor(i*x)) for i in sequence])
+			start += (x - 2)
+
+		sequence = subjects[start:start+c_n-2] 
+		seq.append([int(np.floor(i*c_n)) for i in sequence])
+		start += c_n - 2
+		sequence = subjects[start:] 
+		seq.append([int(np.floor(sequence[i]*c_l[i])) for i in range(c_n)])
 		# for x in range(len(self.cluster)):
 		# 	if seq[-1][x] >= len(self.cluster[x]):
 		# 		err = True
@@ -133,21 +133,14 @@ class Instance(object):
 		for x in range(pop):
 			c_l = [len(x) for x in self.cluster] # do dai tung cluster
 			c_n = len(self.cluster)
-			node = []
+			length = c_n*2-2
 			for c in c_l:
 				if c < 3:
-					node.append([])
 					continue
-				node.append(list(np.random.randint(c,size=c-2)))
+				length += c-2
 
-
-			node.append(list(np.random.randint(c_n,size=c_n-2)))
-			# node.append(list(np.random.randint(min(c_l),size=c_n)))
-			# node.append(list(np.random.randint(max(c_l),size=c_n)))
-			node.append([np.random.randint(c) for c in c_l])
-
-			subjects = np.random.rand(self.dim-2)
-			ind = Learner(subjects,node)
+			subjects = np.random.rand(length)
+			ind = Learner(subjects)
 			self.evaluate(ind)
 			population.append(ind)
 		return population
